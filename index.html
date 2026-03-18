@@ -1,1 +1,658 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nano AI Chat – Intelligenter Chat mit Groq API</title>
+<meta name="description" content="Nano AI Chat: WhatsApp-ähnlicher Messenger mit KI, Community, Gruppen-Chats & Discord-Sync. Kostenlos starten!">
+<meta name="theme-color" content="#00a884">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================
+CSS VARIABLES & THEME
+============================================ */
+:root {
+--primary: #00a884;
+--primary-dark: #008f6f;
+--primary-light: #00d4a7;
+--secondary: #2563eb;
+--bg-primary: #0f172a;
+--bg-secondary: #111827;
+--bg-tertiary: #1f2937;
+--bg-card: #1e293b;
+--text-primary: #f8fafc;
+--text-secondary: #cbd5e1;
+--text-muted: #94a3b8;
+--border-light: #334155;
+--border-medium: #475569;
+--success: #22c55e;
+--warning: #f59e0b;
+--danger: #ef4444;
+--shadow-sm: 0 2px 4px rgba(0,0,0,0.3);
+--shadow-md: 0 4px 8px rgba(0,0,0,0.4);
+--shadow-lg: 0 8px 16px rgba(0,0,0,0.5);
+--radius-sm: 8px;
+--radius-md: 12px;
+--radius-lg: 20px;
+--radius-full: 9999px;
+--transition: 0.3s ease;
+}
+[data-theme="light"] {
+--bg-primary: #ffffff;
+--bg-secondary: #f8fafc;
+--bg-tertiary: #f1f5f9;
+--bg-card: #e2e8f0;
+--text-primary: #0f172a;
+--text-secondary: #334155;
+--text-muted: #64748b;
+--border-light: #cbd5e1;
+--border-medium: #94a3b8;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+background: var(--bg-primary);
+color: var(--text-primary);
+line-height: 1.6;
+overflow-x: hidden;
+}
+a { text-decoration: none; color: inherit; transition: var(--transition); }
+img { max-width: 100%; height: auto; display: block; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.section { padding: 80px 0; }
+.section-title {
+font-size: 32px; font-weight: 800; text-align: center;
+margin-bottom: 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+-webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.section-subtitle {
+text-align: center; color: var(--text-muted); font-size: 18px;
+max-width: 600px; margin: 0 auto 48px;
+}
+.btn {
+display: inline-flex; align-items: center; gap: 10px;
+padding: 14px 28px; border-radius: var(--radius-md);
+font-weight: 600; font-size: 16px; cursor: pointer;
+transition: all var(--transition); border: none;
+}
+.btn-primary {
+background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+color: white; box-shadow: 0 4px 14px rgba(0,168,132,0.4);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,168,132,0.5); }
+.btn-secondary {
+background: var(--bg-tertiary); color: var(--text-secondary);
+border: 2px solid var(--border-light);
+}
+.btn-secondary:hover { background: var(--bg-card); border-color: var(--border-medium); }
+.btn-outline {
+background: transparent; color: var(--primary);
+border: 2px solid var(--primary);
+}
+.btn-outline:hover { background: var(--primary); color: white; }
+.btn-lg { padding: 18px 36px; font-size: 18px; }
+/* ============================================
+HEADER & NAV
+============================================ */
+.header {
+position: fixed; top: 0; left: 0; right: 0;
+background: rgba(15,23,42,0.95); backdrop-filter: blur(10px);
+border-bottom: 1px solid var(--border-light);
+z-index: 1000; padding: 16px 0;
+}
+.header-inner {
+display: flex; align-items: center; justify-content: space-between;
+}
+.logo {
+display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 24px;
+}
+.logo-icon {
+width: 44px; height: 44px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;
+font-size: 24px;
+}
+.nav { display: flex; gap: 8px; }
+.nav-link {
+padding: 10px 16px; border-radius: var(--radius-sm);
+color: var(--text-secondary); font-weight: 500; font-size: 15px;
+}
+.nav-link:hover, .nav-link.active { color: var(--text-primary); background: var(--bg-tertiary); }
+.header-actions { display: flex; gap: 12px; }
+.theme-toggle {
+width: 44px; height: 44px; border-radius: var(--radius-md);
+background: var(--bg-tertiary); border: none; color: var(--text-secondary);
+cursor: pointer; display: flex; align-items: center; justify-content: center;
+font-size: 20px; transition: var(--transition);
+}
+.theme-toggle:hover { background: var(--bg-card); color: var(--text-primary); }
+.mobile-toggle { display: none; }
+/* ============================================
+HERO SECTION
+============================================ */
+.hero {
+padding: 160px 0 100px;
+background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
+text-align: center; position: relative; overflow: hidden;
+}
+.hero::before {
+content: ''; position: absolute; inset: 0;
+background: radial-gradient(circle at 30% 20%, rgba(0,168,132,0.15) 0%, transparent 50%),
+radial-gradient(circle at 70% 80%, rgba(37,99,235,0.15) 0%, transparent 50%);
+pointer-events: none;
+}
+.hero-badge {
+display: inline-flex; align-items: center; gap: 8px;
+padding: 8px 20px; background: rgba(0,168,132,0.15);
+border: 1px solid var(--primary); border-radius: var(--radius-full);
+color: var(--primary); font-weight: 600; font-size: 14px;
+margin-bottom: 24px; animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+.hero-title {
+font-size: clamp(32px, 6vw, 56px); font-weight: 800;
+line-height: 1.1; margin-bottom: 24px;
+}
+.hero-title span {
+background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+-webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero-description {
+font-size: 20px; color: var(--text-secondary);
+max-width: 700px; margin: 0 auto 40px;
+}
+.hero-cta {
+display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 48px;
+}
+.hero-stats {
+display: flex; gap: 32px; justify-content: center; flex-wrap: wrap;
+}
+.stat-item { text-align: center; }
+.stat-value { font-size: 28px; font-weight: 800; color: var(--primary); }
+.stat-label { font-size: 14px; color: var(--text-muted); }
+.hero-image {
+margin-top: 60px; position: relative;
+}
+.hero-screenshot {
+max-width: 900px; margin: 0 auto; border-radius: var(--radius-lg);
+box-shadow: var(--shadow-lg); border: 1px solid var(--border-light);
+}
+/* ============================================
+FEATURES SECTION
+============================================ */
+.features { background: var(--bg-secondary); }
+.features-grid {
+display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+gap: 24px;
+}
+.feature-card {
+background: var(--bg-card); border-radius: var(--radius-lg);
+padding: 32px; border: 1px solid var(--border-light);
+transition: var(--transition);
+}
+.feature-card:hover { transform: translateY(-4px); border-color: var(--primary); }
+.feature-icon {
+width: 56px; height: 56px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;
+font-size: 28px; margin-bottom: 20px;
+}
+.feature-title { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+.feature-description { color: var(--text-muted); font-size: 15px; }
+/* ============================================
+HOW IT WORKS
+============================================ */
+.steps {
+display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+gap: 32px; text-align: center; margin-top: 40px;
+}
+.step { position: relative; padding-top: 20px; }
+.step-number {
+position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+width: 40px; height: 40px; background: var(--primary);
+border-radius: 50%; display: flex; align-items: center; justify-content: center;
+font-weight: 800; color: white; font-size: 18px;
+}
+.step-icon { font-size: 48px; margin-bottom: 16px; }
+.step-title { font-weight: 700; margin-bottom: 8px; }
+.step-description { color: var(--text-muted); font-size: 14px; }
+/* ============================================
+PRICING SECTION
+============================================ */
+.pricing { background: var(--bg-primary); }
+.pricing-grid {
+display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+gap: 24px; max-width: 1000px; margin: 0 auto;
+}
+.pricing-card {
+background: var(--bg-card); border-radius: var(--radius-lg);
+padding: 40px 32px; border: 2px solid var(--border-light);
+text-align: center; transition: var(--transition); position: relative;
+}
+.pricing-card.featured {
+border-color: var(--primary); background: linear-gradient(135deg, rgba(0,168,132,0.1) 0%, transparent 100%);
+}
+.pricing-badge {
+position: absolute; top: 16px; right: 16px;
+background: var(--primary); color: white; padding: 4px 12px;
+border-radius: var(--radius-full); font-size: 12px; font-weight: 700;
+}
+.pricing-icon { font-size: 48px; margin-bottom: 16px; }
+.pricing-name { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+.pricing-price { font-size: 40px; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
+.pricing-period { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+.pricing-features { list-style: none; text-align: left; margin-bottom: 32px; }
+.pricing-features li {
+padding: 10px 0; border-bottom: 1px solid var(--border-light);
+display: flex; align-items: center; gap: 10px; font-size: 15px;
+}
+.pricing-features li::before { content: '✓'; color: var(--success); font-weight: 800; }
+/* ============================================
+FAQ SECTION
+============================================ */
+.faq { background: var(--bg-secondary); }
+.faq-grid { max-width: 800px; margin: 0 auto; }
+.faq-item {
+background: var(--bg-card); border-radius: var(--radius-md);
+border: 1px solid var(--border-light); margin-bottom: 12px;
+overflow: hidden;
+}
+.faq-question {
+padding: 20px 24px; display: flex; justify-content: space-between;
+align-items: center; cursor: pointer; font-weight: 600;
+}
+.faq-question:hover { background: var(--bg-tertiary); }
+.faq-toggle { font-size: 20px; transition: var(--transition); }
+.faq-item.active .faq-toggle { transform: rotate(45deg); }
+.faq-answer {
+padding: 0 24px; max-height: 0; overflow: hidden;
+transition: max-height 0.3s ease, padding 0.3s ease;
+color: var(--text-muted);
+}
+.faq-item.active .faq-answer { padding: 0 24px 20px; max-height: 500px; }
+/* ============================================
+CTA SECTION
+============================================ */
+.cta {
+background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+text-align: center; color: white;
+}
+.cta .section-title { -webkit-text-fill-color: white; background: none; }
+.cta .section-subtitle { color: rgba(255,255,255,0.9); }
+.cta-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.btn-white { background: white; color: var(--primary); }
+.btn-white:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+.btn-outline-white { background: transparent; border-color: white; color: white; }
+.btn-outline-white:hover { background: white; color: var(--primary); }
+/* ============================================
+FOOTER
+============================================ */
+.footer {
+background: var(--bg-secondary); border-top: 1px solid var(--border-light);
+padding: 60px 0 24px;
+}
+.footer-grid {
+display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+gap: 40px; margin-bottom: 40px;
+}
+.footer-brand .logo { margin-bottom: 16px; }
+.footer-brand p { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; }
+.footer-links-title { font-weight: 700; margin-bottom: 16px; }
+.footer-links { list-style: none; }
+.footer-links li { margin-bottom: 10px; }
+.footer-links a { color: var(--text-muted); font-size: 14px; }
+.footer-links a:hover { color: var(--text-primary); }
+.footer-bottom {
+text-align: center; padding-top: 24px; border-top: 1px solid var(--border-light);
+color: var(--text-muted); font-size: 14px;
+}
+/* ============================================
+RESPONSIVE
+============================================ */
+@media (max-width: 768px) {
+.nav { display: none; position: absolute; top: 100%; left: 0; right: 0;
+background: var(--bg-secondary); flex-direction: column; padding: 16px; }
+.nav.active { display: flex; }
+.mobile-toggle { display: flex; }
+.header-actions .btn { display: none; }
+.hero { padding: 120px 0 60px; }
+.hero-title { font-size: 32px; }
+.hero-description { font-size: 18px; }
+.section { padding: 60px 0; }
+}
+</style>
+</head>
+<body>
 
+<!-- Header -->
+<header class="header">
+<div class="container header-inner">
+<a href="#" class="logo">
+<div class="logo-icon">💬</div>
+<span>Nano AI Chat</span>
+</a>
+<nav class="nav" id="nav">
+<a href="#features" class="nav-link">Features</a>
+<a href="#how" class="nav-link">So geht's</a>
+<a href="#pricing" class="nav-link">Preise</a>
+<a href="#faq" class="nav-link">FAQ</a>
+</nav>
+<div class="header-actions">
+<button class="theme-toggle" onclick="toggleTheme()" title="Theme wechseln">🌙</button>
+<a href="https://thenano-chat.github.io/chat.html" class="btn btn-primary btn-lg">🚀 Jetzt kostenlos starten</a>
+<button class="mobile-toggle" onclick="toggleNav()">☰</button>
+</div>
+</div>
+</header>
+
+<!-- Hero Section -->
+<section class="hero">
+<div class="container">
+<div class="hero-badge">🚀 Neu: Groq API Integration</div>
+<h1 class="hero-title">
+Intelligenter Chat mit <span>Nano AI</span>
+</h1>
+<p class="hero-description">
+WhatsApp-ähnlicher Messenger mit KI-Power. Chatten, Gruppen erstellen, Community teilen – alles in einer App. Kostenlos starten!
+</p>
+<div class="hero-cta">
+<a href="https://thenano-chat.github.io/chat.html" class="btn btn-primary btn-lg">🚀 Jetzt kostenlos starten</a>
+<a href="#features" class="btn btn-outline btn-lg">Mehr erfahren</a>
+</div>
+<div class="hero-stats">
+<div class="stat-item">
+<div class="stat-value">5000+</div>
+<div class="stat-label">Nachrichten/Monat Free</div>
+</div>
+<div class="stat-item">
+<div class="stat-value">∞</div>
+<div class="stat-label">Nano Plan</div>
+</div>
+<div class="stat-item">
+<div class="stat-value">10</div>
+<div class="stat-label">Sprachen</div>
+</div>
+</div>
+<div class="hero-image">
+<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='500' viewBox='0 0 900 500'%3E%3Crect fill='%231e293b' width='900' height='500'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-family='Inter' font-size='24'%3EApp Screenshot Placeholder%3C/text%3E%3C/svg%3E" alt="Nano AI Chat App" class="hero-screenshot">
+</div>
+</div>
+</section>
+
+<!-- Features Section -->
+<section class="section features" id="features">
+<div class="container">
+<h2 class="section-title">Besonderheiten</h2>
+<p class="section-subtitle">Alles was du brauchst – intelligent, schnell und sicher.</p>
+<div class="features-grid">
+<div class="feature-card">
+<div class="feature-icon">🤖</div>
+<h3 class="feature-title">KI-Powered Chat</h3>
+<p class="feature-description">Nano-AI antwortet intelligent auf deine Fragen. Powered by Groq API mit Llama 3.3.</p>
+</div>
+<div class="feature-card">
+<div class="feature-icon">👥</div>
+<h3 class="feature-title">Gruppen-Chats</h3>
+<p class="feature-description">Erstelle Gruppen, lade Freunde ein und chatte gemeinsam mit KI-Unterstützung.</p>
+</div>
+<div class="feature-card">
+<div class="feature-icon">🌍</div>
+<h3 class="feature-title">Community Chat</h3>
+<p class="feature-description">Tausche dich mit der Nano-Community aus. Nachrichten werden optional an Discord gesynced.</p>
+</div>
+<div class="feature-card">
+<div class="feature-icon">🔐</div>
+<h3 class="feature-title">Sicher & Privat</h3>
+<p class="feature-description">Deine Daten gehören dir. Firebase Authentication + verschlüsselte Speicherung.</p>
+</div>
+<div class="feature-card">
+<div class="feature-icon">🌙</div>
+<h3 class="feature-title">Dark/Light Mode</h3>
+<p class="feature-description">Wechsle zwischen Themes oder lass es automatisch anpassen.</p>
+</div>
+<div class="feature-card">
+<div class="feature-icon">🌍</div>
+<h3 class="feature-title">10 Sprachen</h3>
+<p class="feature-description">Deutsch, English, Français, Español und mehr – einfach umschalten.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- How It Works -->
+<section class="section" id="how">
+<div class="container">
+<h2 class="section-title">So funktioniert's</h2>
+<p class="section-subtitle">In 3 einfachen Schritten startklar.</p>
+<div class="steps">
+<div class="step">
+<div class="step-number">1</div>
+<div class="step-icon">📝</div>
+<h4 class="step-title">Registrieren</h4>
+<p class="step-description">Kostenlos Account erstellen oder mit bestehendem Nano-AI Login anmelden.</p>
+</div>
+<div class="step">
+<div class="step-number">2</div>
+<div class="step-icon">💬</div>
+<h4 class="step-title">Chatten</h4>
+<p class="step-description">Starte einen Chat, erstelle eine Gruppe oder join die Community.</p>
+</div>
+<div class="step">
+<div class="step-number">3</div>
+<div class="step-icon">🚀</div>
+<h4 class="step-title">Genießen</h4>
+<p class="step-description">KI-Antworten, Emoji-Picker, Dark Mode – alles dabei!</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Pricing -->
+<section class="section pricing" id="pricing">
+<div class="container">
+<h2 class="section-title">Preise</h2>
+<p class="section-subtitle">Wähle den Plan, der zu dir passt. Alle Preise aktuell 0€!</p>
+<div class="pricing-grid">
+<div class="pricing-card">
+<div class="pricing-icon">🆓</div>
+<h3 class="pricing-name">Free</h3>
+<div class="pricing-price">0€</div>
+<div class="pricing-period">/ Monat</div>
+<ul class="pricing-features">
+<li>5000 Nachrichten/Monat</li>
+<li>Standard Geschwindigkeit</li>
+<li>Basis Support</li>
+<li>Alle Core Features</li>
+</ul>
+<a href="https://thenano-chat.github.io/chat.html" class="btn btn-primary btn-lg">🚀 Jetzt kostenlos starten</a>
+</div>
+<div class="pricing-card featured">
+<span class="pricing-badge">Beliebt</span>
+<div class="pricing-icon">🚀</div>
+<h3 class="pricing-name">Ultra</h3>
+<div class="pricing-price">4.99€</div>
+<div class="pricing-period">/ Monat</div>
+<ul class="pricing-features">
+<li>100.000 Nachrichten/Monat</li>
+<li>Schnelle Antwort</li>
+<li>Priority Support</li>
+<li>Früher Zugang zu Features</li>
+</ul>
+<a href="https://thenano-chat.github.io/chat.html" class="btn btn-primary btn-lg">🚀 Jetzt kostenlos starten</a>
+</div>
+<div class="pricing-card">
+<div class="pricing-icon">👑</div>
+<h3 class="pricing-name">Nano</h3>
+<div class="pricing-price">9.99€</div>
+<div class="pricing-period">/ Monat</div>
+<ul class="pricing-features">
+<li>Unbegrenzte Nachrichten</li>
+<li>Schnellste Antwort</li>
+<li>VIP Support</li>
+<li>Exklusive Features</li>
+</ul>
+<a href="https://thenano-chat.github.io/chat.html" class="btn btn-primary btn-lg">🚀 Jetzt kostenlos starten</a>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="section faq" id="faq">
+<div class="container">
+<h2 class="section-title">FAQ</h2>
+<p class="section-subtitle">Häufig gestellte Fragen – kurz beantwortet.</p>
+<div class="faq-grid">
+<div class="faq-item">
+<div class="faq-question" onclick="toggleFaq(this)">
+<span>Ist Nano AI Chat wirklich kostenlos?</span>
+<span class="faq-toggle">+</span>
+</div>
+<div class="faq-answer">
+Ja! Der Free-Plan bietet 5000 Nachrichten pro Monat komplett kostenlos. Ultra und Nano sind optional.
+</div>
+</div>
+<div class="faq-item">
+<div class="faq-question" onclick="toggleFaq(this)">
+<span>Wie sicher sind meine Daten?</span>
+<span class="faq-toggle">+</span>
+</div>
+<div class="faq-answer">
+Wir nutzen Firebase mit verschlüsselter Übertragung. Passwörter werden gehasht gespeichert. Du kannst deine Daten jederzeit exportieren oder löschen.
+</div>
+</div>
+<div class="faq-item">
+<div class="faq-question" onclick="toggleFaq(this)">
+<span>Funktioniert das auch offline?</span>
+<span class="faq-toggle">+</span>
+</div>
+<div class="faq-answer">
+Die App benötigt eine Internetverbindung für KI-Antworten und Sync. Chats werden lokal zwischengespeichert.
+</div>
+</div>
+<div class="faq-item">
+<div class="faq-question" onclick="toggleFaq(this)">
+<span>Kann ich meinen Account mit Nano AI Chat verbinden?</span>
+<span class="faq-toggle">+</span>
+</div>
+<div class="faq-answer">
+Ja! Nano-Chat nutzt dieselben Accounts wie Nano AI Chat. Einfach mit deinem bestehenden Login anmelden.
+</div>
+</div>
+<div class="faq-item">
+<div class="faq-question" onclick="toggleFaq(this)">
+<span>Wie melde ich Probleme?</span>
+<span class="faq-toggle">+</span>
+</div>
+<div class="faq-answer">
+Nutze den Support im Profil oder schreibe eine Nachricht im Community Chat. Das Team antwortet schnell!
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- CTA Section -->
+<section class="section cta">
+<div class="container">
+<h2 class="section-title">Bereit loszulegen?</h2>
+<p class="section-subtitle">Starte jetzt kostenlos und erlebe intelligentes Chatten.</p>
+<div class="cta-buttons">
+<a href="https://thenano-chat.github.io/chat.html" class="btn btn-primary btn-lg">🚀 Jetzt kostenlos starten</a>
+<a href="#features" class="btn btn-outline-white btn-lg">Mehr erfahren</a>
+</div>
+</div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+<div class="container">
+<div class="footer-grid">
+<div class="footer-brand">
+<a href="#" class="logo">
+<div class="logo-icon">💬</div>
+<span>Nano AI Chat</span>
+</a>
+<p>Intelligenter Messenger mit KI-Power. Teil des Nano AI Netzwerks.</p>
+</div>
+<div>
+<h4 class="footer-links-title">Produkt</h4>
+<ul class="footer-links">
+<li><a href="#features">Features</a></li>
+<li><a href="#pricing">Preise</a></li>
+<a href="https://thenano-chat.github.io/chat.html" class="btn btn-primary btn-lg">🚀 Jetzt kostenlos starten</a>
+</ul>
+</div>
+<div>
+<h4 class="footer-links-title">Support</h4>
+<ul class="footer-links">
+<li><a href="#faq">FAQ</a></li>
+<li><a href="#">Kontakt</a></li>
+<li><a href="#">Status</a></li>
+</ul>
+</div>
+<div>
+<h4 class="footer-links-title">Rechtliches</h4>
+<ul class="footer-links">
+<li><a href="#">Datenschutz</a></li>
+<li><a href="#">AGB</a></li>
+<li><a href="#">Impressum</a></li>
+</ul>
+</div>
+</div>
+<div class="footer-bottom">
+<p>&copy; 2026 Nano AI Chat. Ein Projekt von Lobi & Jovi.</p>
+</div>
+</div>
+</footer>
+
+<script>
+// Theme Toggle
+function toggleTheme() {
+const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+document.documentElement.setAttribute('data-theme', isLight ? 'dark' : 'light');
+localStorage.setItem('nano_theme', isLight ? 'dark' : 'light');
+document.querySelector('.theme-toggle').textContent = isLight ? '🌙' : '☀️';
+}
+// Load saved theme
+if (localStorage.getItem('nano_theme') === 'light') {
+document.documentElement.setAttribute('data-theme', 'light');
+document.querySelector('.theme-toggle').textContent = '☀️';
+}
+// Mobile Nav Toggle
+function toggleNav() {
+document.getElementById('nav').classList.toggle('active');
+}
+// FAQ Toggle
+function toggleFaq(element) {
+const item = element.parentElement;
+item.classList.toggle('active');
+}
+// Smooth scroll for nav links
+document.querySelectorAll('a[href^="#"]').forEach(link => {
+link.addEventListener('click', function(e) {
+const href = this.getAttribute('href');
+if (href !== '#' && href.startsWith('#')) {
+e.preventDefault();
+const target = document.querySelector(href);
+if (target) {
+target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+document.getElementById('nav').classList.remove('active');
+}
+}
+});
+});
+// Header scroll effect
+window.addEventListener('scroll', () => {
+const header = document.querySelector('.header');
+if (window.scrollY > 50) {
+header.style.background = 'rgba(15,23,42,0.98)';
+header.style.boxShadow = 'var(--shadow-md)';
+} else {
+header.style.background = 'rgba(15,23,42,0.95)';
+header.style.boxShadow = 'none';
+}
+});
+console.log("✅ Nano AI Chat Landing Page loaded!");
+</script>
+</body>
+</html>
